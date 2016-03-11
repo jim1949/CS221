@@ -1,0 +1,342 @@
+<head>
+  <title>From Language to Logic</title>
+  <script src="plugins/main.js"></script>
+</head>
+
+<body onload="onLoad('Adam Goldberg')">
+
+<div id="assignmentHeader"></div>
+
+<p>
+In this assignment, you will get some hands-on experience with logic and
+see how logic can be used to represent the meaning of natural language sentences,
+and how it can be used to solve puzzles and prove theorems.
+Most of this assignment will be translating English into logical formulas,
+but in Problem 4, we will delve into the mechanics of logical inference.
+</p>
+
+<p>
+To get started, launch a Python shell and try typing the following commands to
+add logical expressions into the knowledge base.
+</p>
+
+<pre>
+from logic import *
+Rain = Atom('Rain')           # Shortcut
+Wet = Atom('Wet')             # Shortcut
+kb = createResolutionKB()     # Create the knowledge base
+kb.ask(Wet)                   # Prints "I don't know."
+kb.ask(Not(Wet))              # Prints "I don't know."
+kb.tell(Implies(Rain, Wet))   # Prints "I learned something."
+kb.ask(Wet)                   # Prints "I don't know."
+kb.tell(Rain)                 # Prints "I learned something."
+kb.tell(Wet)                  # Prints "I already knew that."
+kb.ask(Wet)                   # Prints "Yes."
+kb.ask(Not(Wet))              # Prints "No."
+kb.tell(Not(Wet))             # Prints "I don't buy that."
+</pre>
+
+To print out the contents of the knowledge base, you can call <code>kb.dump()</code>.
+For the example above, you get:
+<pre>
+==== Knowledge base [3 derivations] ===
+* Or(Not(Rain),Wet)
+* Rain
+- Wet
+</pre>
+In the output, '*' means the fact was explicitly added by the user, and '-'
+means that it was inferred.
+
+Here is a table that describes how logical formulas are represented in code.
+Use it as a reference guide:
+<p>
+<table>
+  <tr><td><b>Name</b></td><td><b>Mathematical notation</b></td><td><b>Code</b></td></tr>
+  <tr>
+    <td>Constant symbol</td>
+    <td>$\text{stanford}$</td>
+    <td><code>Constant('stanford')</code> (must be lowercase)</td>
+  <tr>
+    <td>Variable symbol</td>
+    <td>$x$</td>
+    <td><code>Variable('$x')</code> (must be lowercase)</td>
+  <tr>
+    <td>Atomic formula (atom)</td>
+    <td>$\text{Rain}$<br><br>$\text{LocatedIn}(\text{stanford}, x)$</td>
+    <!--<td><code>Atom('LocatedIn', Constant('stanford'), Variable('$x'))</code> (predicate must be uppercase)</td>-->
+    <td><code>Atom('Rain')</code> (predicate must be uppercase)<br><br><code>Atom('LocatedIn', 'stanford', '$x')</code> (arguments are symbols)</td>
+  </tr>
+  <tr>
+    <td>Negation</td>
+    <td>$\neg \text{Rain}$</td>
+    <td><code>Not(Atom('Rain'))</code></td>
+  </tr>
+  <tr>
+    <td>Conjunction</td>
+    <td>$\text{Rain} \wedge \text{Snow}$</td>
+    <td><code>And(Atom('Rain'), Atom('Snow'))</code></td>
+  </tr>
+  <tr>
+    <td>Disjunction</td>
+    <td>$\text{Rain} \vee \text{Snow}$</td>
+    <td><code>Or(Atom('Rain'), Atom('Snow'))</code></td>
+  </tr>
+  <tr>
+    <td>Implication</td>
+    <td>$\text{Rain} \to \text{Wet}$</td>
+    <td><code>Implies(Atom('Rain'), Atom('Wet'))</code></td>
+  </tr>
+  <tr>
+    <td>Equivalence</td>
+    <td>$\text{Rain} \leftrightarrow \text{Wet}$ (syntactic sugar for $\text{Rain} \to \text{Wet} \wedge \text{Wet} \to \text{Rain}$)</td>
+    <td><code>Equiv(Atom('Rain'), Atom('Wet'))</code></td>
+  </tr>
+  <tr>
+    <td>Existential quantification</td>
+    <td>$\exists x . \text{LocatedIn}(\text{stanford}, x)$</td>
+    <td><code>Exists('$x', Atom('LocatedIn', 'stanford', '$x'))</code></td>
+  </tr>
+  <tr>
+    <td>Universal quantification</td>
+    <td>$\forall x . \text{MadeOfAtoms}(x)$</td>
+    <td><code>Forall('$x', Atom('MadeOfAtoms', '$x'))</code></td>
+  </tr>
+</table>
+</li>
+</p>
+
+<p>
+The operations <code>And</code> and <code>Or</code> only take two arguments.
+If we want to take a conjunction or disjunction of more than two, use <code>AndList</code> and <code>OrList</code>.
+For example:
+<code>AndList([Atom('A'), Atom('B'), Atom('C')])</code> is equivalent to <code>And(And(Atom('A'), Atom('B')), Atom('C'))</code>.
+</p>
+
+<!------------------------------------------------------------>
+<div class="problemTitle">Problem 1: Propositional logic</div>
+
+<p>
+Write a propositional logic formula for each of the following English
+sentences in the given function in <code>submission.py</code>.
+For example, if the sentence is <i>"If it is raining, it is wet,"</i>
+then you would write <code>Implies(Atom('Rain'), Atom('Wet'))</code>, which
+would be $\text{Rain} \to \text{Wet}$ in symbols (see <code>examples.py</code>).
+Note: Don't forget to return the constructed formula!
+</p>
+
+<ol class="problem">
+<li class="code"><code>formula1a</code>: <i>"If it's summer and we're in California, then it doesn't rain."</i></li>
+<li class="code"><code>formula1b</code>: <i>"It's wet if and only if it is raining or the sprinklers are on."</i></li>
+<li class="code"><code>formula1c</code>: <i>"Either it's day or night (but not both)."</i></li>
+</ol>
+
+<p>
+You can run the following command to test each formula:
+<pre>
+python grader.py formula1a
+</pre>
+If your formula is wrong, then the grader will provide a counterexample, which
+is a model that your formula and the correct formula don't agree on.
+For example, if you accidentally wrote <code>And(Atom('Rain'), Atom('Wet'))</code>
+for <i>"If it is raining, it is wet,"</i>, then the grader would output the
+following:
+<pre>
+Your formula (And(Rain,Wet)) says the following model is FALSE, but it should be TRUE:
+* Rain = False
+* Wet = True
+* (other atoms if any) = False
+</pre>
+In this model, it's not raining and it is wet, which satisfies the correct formula $\text{Rain} \to \text{Wet}$ (TRUE),
+but does not satisfy the incorrect formula $\text{Rain} \wedge \text{Wet}$ (FALSE).
+Use these counterexamples to guide you in the rest of the assignment.
+</p>
+
+<!------------------------------------------------------------>
+<div class="problemTitle">Problem 2: First-order logic</div>
+
+<p>
+Write a first-order logic formula for each of the following English
+sentences in the given function in <code>submission.py</code>.
+For example, if the sentence is <i>"There is a light that shines,"</i>
+then you would write <code>Exists('$x', And(Atom('Light', '$x'), Atom('Shines', '$x')))</code>,
+which would be $\exists x . \text{Light}(x) \wedge \text{Shines}(x)$ in
+symbols (see <code>examples.py</code>).
+</p>
+
+<ol class="problem">
+<li class="code"><code>formula2a</code>: <i>"Every person has a mother."</i></li>
+<li class="code"><code>formula2b</code>: <i>"At least one person has no children."</i></li>
+<li class="code"><code>formula2c</code>: Create a formula which defines <code>Daughter(x,y)</code> in terms of <code>Female(x)</code> and <code>Child(x,y)</code>.
+<li class="code"><code>formula2d</code>: Create a formula which defines <code>Grandmother(x,y)</code> in terms of <code>Female(x)</code> and <code>Parent(x,y)</code>.
+</ol>
+
+<!------------------------------------------------------------>
+<div class="problemTitle">Problem 3: Liar puzzle</div>
+
+<p>
+Someone crashed the server, and accusations are flying.  For this problem, we
+will encode the evidence in first-order logic formulas to find out who crashed
+the server.
+You've narrowed it down to four suspects: John, Susan, Mark, and Nicole.
+You have the following information:
+<ul>
+   <li> John says: "It wasn't me!" </li>
+   <li> Susan says: "It was Nicole!" </li>
+   <li> Mark says: "No, it was Susan!" </li>
+   <li> Nicole says: "Susan's a liar." </li>
+   <li> You know that exactly one person is telling the truth. </li>
+   <li> You also know exactly one person crashed the server. </li>
+</ul>
+</p>
+
+<ol class="problem">
+  <li class="code">Fill out <code>liar()</code> to return a list of 6 formulas, one for each of the above facts. Be sure your formulas are exactly in the order specified.
+  </li>
+</ol>
+
+You can test your code using the following commands:
+
+<pre>
+python grader.py liar-0
+...
+python grader.py liar-5
+python grader.py liar-all  # Tests the conjunction of all the formulas
+</pre>
+
+To solve the puzzle and find the answer, <code>tell</code> the formulas to the knowledge base and
+<code>ask</code> the query <code>CrashedServer('$x')</code>, by running:
+<pre>
+python grader.py liar-run
+</pre>
+
+<!------------------------------------------------------------>
+<div class="problemTitle">Problem 4: Modus ponens inference</div>
+
+<p>
+For this problem, we will implement a generalized Modus ponens rule of
+inference for propositional logic.  Recall that Modus
+ponens asserts that if we have two formulas, $A \to C$ and $A$ in our knowledge base,
+then we can derive $C$.
+Generalized Modus ponens allows for multiple antecedents.
+If we have the conjunction of $k$ antecedents $A_1, \dots, A_k$
+and we also have one of those symbols $A_i$ ($1 \le i \le k$), then we
+derive the implication formula where $A_i$ is removed.
+Formally, if the following two formulas are in the knowledge base:
+<ul>
+  <li>$A_1 \wedge \cdots \wedge A_k \to C$
+  <li>$A_i$
+</ul>
+Then we derive $$A_1 \wedge \cdots A_{i-1} \wedge A_{i+1} \wedge A_k \to C.$$
+In the following, we will simply refer to generalized Modus ponens as Modus ponens.
+<ol class="problem">
+
+  <li class="writeup">
+  In this part, you will see that some inferences that might look like they're
+  outside the scope of Modus ponens are actually within reach.
+  Suppose the knowledge base contains the following formulas:
+  $$\text{KB} = \{ (A \vee B) \to C, A  \}.$$
+  Convert the knowledge base into conjunctive normal form (CNF).
+  <p>
+  Define a new rule that derives $P \to Q$ to $\neg P \vee Q$, as well as an analogous one from $\neg P \vee Q$ to $P \to Q$.
+  Then use only Modus ponens and these two new rules to derive $C$. Remember, this
+  isn't about you as a human being able to reason through the manipulations, but rather
+  about the rote application of a small set of transformations which a computer could
+  execute. Please show how your knowledge base changes as you apply the rules.
+  </li>
+
+  <li class="writeup">
+  Recall that Modus ponens is not complete, meaning that we can't use it to derive everything that's true.
+  Suppose the knowledge base contains the following formulas:
+  $$\text{KB} = \{ A \vee B, B \to C, (A \vee C) \to D \}.$$
+  In this example, Modus ponens cannot be used to derive $D$, even though
+  $D$ is entailed by the knowledge base.
+  <p>
+  Recall that the resolution rule is complete though.
+  Convert the knowledge base into CNF and apply the resolution rule repeatedly
+  to derive $D$.
+
+  </li>
+</ol>
+</p>
+
+<!------------------------------------------------------------>
+<div class="problemTitle">Problem 5: Odd and even integers</div>
+
+<p>
+In this problem, we will see how to use logic to automatically prove
+mathematical theorems.  We will focus on encoding the theorem and leave the
+proving part to the logical inference algorithm.
+Here is the theorem:
+</p>
+If the following conditions hold:
+<ul>
+   <li> Each number $x$ has a unique successor, which is not equal to $x$. </li>
+   <li> Each number is either odd or even, but not both. </li>
+   <li> The successor of an even number is odd. </li>
+   <li> The successor of an odd number is even. </li>
+   <li> For every number $x$, the successor of $x$ is larger than $x$. </li>
+   <li> Larger is a transitive property: if $x$ is larger than $y$ and $y$ is
+        larger than $z$, then $x$ is larger than $z$. </li>
+</ul>
+Then we have the following consequence:
+<ul>
+  <li>For each number, there is an even number greater than it.</li>
+</ul>
+
+<ol class="problem">
+   <li class="code">Fill out <code>ints()</code> to construct 6 formulas for
+   each of the conditions.  The consequence has been filled out for you
+   (<code>query</code> in the code).
+You can test your code using the following commands:
+<pre>
+python grader.py ints-0
+...
+python grader.py ints-5
+python grader.py ints-all  # Tests the conjunction of all the formulas
+</pre>
+
+To finally prove the theorem, <code>tell</code> the formulas to the knowledge base and
+<code>ask</code> the query by running model checking (on a finite model):
+<pre>
+python grader.py ints-run
+</pre>
+</li>
+
+<li class="writeup">
+Suppose we added another constraint:
+<ul>
+  <li> A number is not larger than itself. </li>
+</ul>
+Briefly argue that there is no finite model for which the resulting set of 7
+constraints is consistent.
+
+This means that if we try to prove this theorem by model checking only finite models,
+we will find that it is false, when in fact the theorem is true for a countably infinite model
+(where the objects in the model are the numbers).
+
+</li>
+
+</ol>
+
+<!------------------------------------------------------------>
+<div class="problemTitle">Problem 6: Utterance Parser (Extra Credit)</div>
+
+<p>
+How can we parse utterances from a human into first order formulas? A couple
+have been provided in the code for you in <code>createNLIGrammar()</code>.
+Parsing is hard, so we have simplified the set of possible words for you to make
+your job easier.
+
+<ol class="problem">
+<li class="code">
+  Please populate rules for the following sentence structures in <code>createNLIGrammar()</code>
+  (X and Y are atoms):
+    <ol>
+      <li>Every X has a Y.</li>
+      <li>No X has a Y.</li>
+      <li>If a X has a Y, then it has a Z.</li>
+    </ol>
+</li>
+</ol>
+
+</body>
